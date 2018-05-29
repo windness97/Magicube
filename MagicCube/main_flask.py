@@ -50,3 +50,9 @@ def refresh_data():
     global cubemanager
 
     cubemanager.refresh_cubedatas()
+
+
+def update_data(data):
+    global cubemanager
+
+    cubemanager.update_cubedatas(data)

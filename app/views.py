@@ -6,6 +6,8 @@ from app.handler.tasks import *
 from app.utils.legal import allowed_upload_filename
 from flask import render_template, request, jsonify
 
+import json
+
 from MagicCube.main_flask import return_data
 
 
@@ -61,3 +63,11 @@ def ask_rubiks():
 def refresh_rubiks():
     task = refresh_cube.delay()
     return "refresh success"
+
+
+@app.route('/update', methods=['POST'])
+def update_rubiks():
+    data_str = bytes.decode(request.data)
+    data_json = json.loads(data_str)
+    task = update_cube.delay(data_json)
+    return "success"

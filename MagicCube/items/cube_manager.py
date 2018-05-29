@@ -56,7 +56,9 @@ class Color(object):
         ORANGE: 'orange',
         GREEN: 'green',
         YELLOW: 'yellow',
-        None: 'None'
+        NONE: 'NONE',
+        None: 'None',
+
     }
 
     @staticmethod
@@ -1159,6 +1161,7 @@ class CubeManager(object):
             self.colordic = {}
 
             for color in colors:
+                # self.colordic[color] = Color.NONE
                 self.colordic[color] = None
 
         def __str__(self) -> str:
@@ -1174,6 +1177,7 @@ class CubeManager(object):
                     self.colordic[color] = color
             else:
                 for color in self.colordic.keys():
+                    # self.colordic[color] = Color.NONE
                     self.colordic[color] = None
 
     class FaceData(object):
@@ -1313,6 +1317,36 @@ class CubeManager(object):
                             self.inputFace(face, face2)
 
                 remainFaces.remove(face)
+
+    def update_cubedatas(self, newdatas):
+
+        # lock
+        self.w_mutex.acquire()
+        for subData in newdatas:
+            data = subData['data']
+            center_color = subData['center_color']
+
+            # CubeManager内表示色块颜色未知用的是None，不能用Color.NONE = 6
+            for colors in data:
+                for i in range(3):
+                    if colors[i] == Color.NONE:
+                        colors[i] = None
+
+            neighborsColors = CubeManager.colorlinksdic[center_color]
+
+            self.getCube({center_color, neighborsColors[3], neighborsColors[0]}).colordic[center_color] = data[0][0]
+            self.getCube({center_color, neighborsColors[0]}).colordic[center_color] = data[0][1]
+            self.getCube({center_color, neighborsColors[0], neighborsColors[1]}).colordic[center_color] = data[0][2]
+
+            self.getCube({center_color, neighborsColors[3]}).colordic[center_color] = data[1][0]
+            self.getCube({center_color}).colordic[center_color] = data[1][1]
+            self.getCube({center_color, neighborsColors[1]}).colordic[center_color] = data[1][2]
+
+            self.getCube({center_color, neighborsColors[3], neighborsColors[2]}).colordic[center_color] = data[2][0]
+            self.getCube({center_color, neighborsColors[2]}).colordic[center_color] = data[2][1]
+            self.getCube({center_color, neighborsColors[2], neighborsColors[1]}).colordic[center_color] = data[2][2]
+
+        self.w_mutex.release()
 
     def refresh_cubedatas(self):
         # lock

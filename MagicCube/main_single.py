@@ -49,13 +49,13 @@ def onMouseEvent(event, x, y, flags, param):
         print("bgr: %-15s, hsv: %-15s, color: %s" % (
         round_color, Color.bgr2hsv(round_color), Color.names[Color.getColorByBGR(round_color)]))
 
-    if event == cv2.EVENT_LBUTTONDBLCLK:
+    # if event == cv2.EVENT_LBUTTONDBLCLK:
 
-        for set in curr_framehandler.blocklinker.legalSets:
-            for block in set.blocks:
-                cnt = block.contour()
-                if cv2.pointPolygonTest(cnt, (x, y), False):
-                    print(block.id)
+    #     for set in curr_framehandler.blocklinker.legalSets:
+    #         for block in set.blocks:
+    #             cnt = block.contour()
+    #             if cv2.pointPolygonTest(cnt, (x, y), False):
+    #                 print(block.id)
 
     cv2.imshow('img', img_copy)
 
@@ -193,5 +193,9 @@ while True:
         img = initImg(img, scaleratio)
         result = excuteFrame(img, cubemanager)
         pass
+    if key == ord('r'):
+        cubemanager.refresh_cubedatas()
+        print("cube manager refreshed.")
+        cubemanager.showCubes()
 
 cv2.destroyAllWindows()

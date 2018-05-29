@@ -3,7 +3,7 @@ import time
 from werkzeug.utils import secure_filename
 from app import celery
 from app import app_path
-from MagicCube.main_flask import excute_frame, refresh_data
+from MagicCube.main_flask import excute_frame, refresh_data, update_data
 import requests
 
 
@@ -53,3 +53,8 @@ def recognize(self, filename):
 @celery.task(bind=True)
 def refresh_cube(self):
     refresh_data()
+
+@celery.task(bind=True)
+def update_cube(self, data):
+    update_data(data)
+
