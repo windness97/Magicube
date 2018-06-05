@@ -1238,14 +1238,19 @@ class CubeManager(object):
     standardMagicube[getTuple2({Color.GREEN, Color.RED, Color.YELLOW})] = \
         (27, (Color.GREEN, Color.RED, Color.YELLOW))
 
-
     # cubr solution -> my solution dict
     dict_CubrSolution2MySolution = {"F": "F", "F'": "G",
-                               "B": "B", "B'": "C",
-                               "L": "R", "L'": "S",
-                               "R": "L", "R'": "M",
-                               "U": "D", "U'": "E",
-                               "D": "U", "D'": "V"}
+                                    "B": "B", "B'": "C",
+                                    "L": "R", "L'": "S",
+                                    "R": "L", "R'": "M",
+                                    "U": "D", "U'": "E",
+                                    "D": "U", "D'": "V"}
+    dict_CubrSolution2MySolutionDebug = {"F": "F", "F'": "F'",
+                                         "B": "B", "B'": "B'",
+                                         "L": "R", "L'": "R'",
+                                         "R": "L", "R'": "L'",
+                                         "U": "D", "U'": "D'",
+                                         "D": "U", "D'": "U'"}
 
     outerRingPositions = (
         (1, 0), (2, 0),
@@ -1536,10 +1541,42 @@ class CubeManager(object):
         newState = CubeState()
         newState.setState(newStateArray)
 
-        # print(newState)
+        print(newState)
 
         solution = brief(solutions.beginner3Layer(newState))
         return solution
+
+    def cubrSolution2MysolutionDebug(self, solution):
+        result = ''
+        current = None
+        for i in range(len(solution)):
+            if current is None:
+                current = solution[i]
+                if i != len(solution) - 1 and solution[i + 1] == "'":
+                    current += solution[i + 1]
+                    continue
+
+            result += CubeManager.dict_CubrSolution2MySolutionDebug[current]
+            current = None
+        return result
+
+    def solveCubeDebug(self):
+        try:
+            newStateArray = self.getCubrStateArray()
+            newState = CubeState()
+            newState.setState(newStateArray)
+
+            steps = solutions.beginner3LayerDebug(newState)
+
+            for step in steps:
+                print(self.cubrSolution2MysolutionDebug(brief(step)))
+
+        except ValueError as reason:
+            print("%s, %s" % (reason.__class__, reason))
+            return 'IMPOSSIBLE'
+        except KeyError as reason:
+            print("%s, %s" % (reason.__class__, reason))
+            return 'ERRORCOLOR'
 
     def getCubrStateArray(self):
 

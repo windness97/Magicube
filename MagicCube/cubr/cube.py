@@ -195,3 +195,6 @@ Non-graphical; meant for algorithmic purposes."""
 
     def setState(self, state):
         self.state = state
+
+    def setStateItem(self, z, y, x, item):
+        self.state[z][y][x] = item

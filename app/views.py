@@ -49,7 +49,7 @@ def pic_upload():
 
         task = recognize.delay(fullname)
         print(task.result)
-        return 'start excuting'
+        return 'success'
     else:
         return 'illegal filename'
 
@@ -62,7 +62,7 @@ def ask_rubiks():
 @app.route('/refresh', methods=['POST'])
 def refresh_rubiks():
     task = refresh_cube.delay()
-    return "refresh success"
+    return "success"
 
 
 @app.route('/update', methods=['POST'])

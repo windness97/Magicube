@@ -87,7 +87,8 @@ standardItem = CubeManager.standardMagicube[CubeManager.getTuple(cubeColorset)]
 # print(ret)
 
 
-print(manager.solveCube())
+# print(manager.solveCube())
 
+manager.solveCubeDebug()
 # solution = manager.cubrSolution2MySolution("FUDBF'D'")
 # print(solution)

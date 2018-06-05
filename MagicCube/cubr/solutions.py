@@ -7,6 +7,7 @@
 
 from MagicCube.cubr.geometry import *
 import time
+# from MagicCube.cubr.cube import CubeState
 import datetime
 
 SOLVED_STATE = [[[(1, 210), (2, 210), (3, 210)],
@@ -1111,3 +1112,65 @@ def beginner3Layer(state, topLayer=+K_HAT):
     refine(moves)
 
     return moves
+
+
+def beginner3LayerDebug(originState, topLayer=+K_HAT):
+
+    # print(state)
+    # state.setStateItem(0, 1, 1, (5, 201))
+    # print(state)
+
+    whiteStateItem = (0, 1, 1, (5, 201, 210))
+    redStateItem = (1, 2, 1, (17, 12, 210))
+    blueStateItem = (1, 1, 0, (13, 120, 210))
+    orangeStateItem = (1, 0, 1, (11, 12, 210))
+    greenStateItem = (1, 1, 2, (15, 120, 210))
+    yellowStateItem = (2, 1, 1, (23, 201, 210))
+    newStateItems = [whiteStateItem, redStateItem, blueStateItem, orangeStateItem, greenStateItem, yellowStateItem]
+
+    stepsCount = []
+    maxActions = None
+
+    for i in range(2 ** len(newStateItems)):
+        if i == 27:
+            aaa = 1
+        state = originState.copy()
+
+        a5 = i // 32
+        a4 = i % 32 // 16
+        a3 = i % 16 // 8
+        a2 = i % 8 // 4
+        a1 = i % 4 // 2
+        a0 = i % 2
+
+        a = [None, None, None, None, None, None]
+        for j in range(5, -1, -1):
+            a[j] = i % (2 ** (j + 1)) // (2 ** j)
+
+        for j in range(6):
+            state.setStateItem(newStateItems[j][0], newStateItems[j][1], newStateItems[j][2],
+                               (newStateItems[j][3][0], newStateItems[j][3][1 + a[j]]))
+
+        stepActions = []
+        steps = [topCrossBeginner,
+                 topCornersBeginner,
+                 secondLayerBeginner,
+                 thirdLayerEdgeOrientation,
+                 thirdLayerCornerOrientation,
+                 thirdLayerCornerPermutation,
+                 thirdLayerEdgePermutation]
+
+        for step in steps:
+            newMoves = step(state, topLayer)
+            if newMoves is None:
+                break
+            stepActions.append(newMoves)
+
+        if len(stepActions) == 7:
+            maxActions = stepActions
+        stepsCount.append(len(stepActions))
+
+    print(len(stepsCount))
+    print(stepsCount)
+
+    return maxActions
