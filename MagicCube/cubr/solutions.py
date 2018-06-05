@@ -924,6 +924,7 @@ def thirdLayerEdgeOrientation(state, topLayer):
         front = operator
         right = front * bottomLayer
 
+        # true -- saka
         axesToRotate.append((right, True))
         axesToRotate.append((bottomLayer, True))
         axesToRotate.append((front, True))
@@ -1102,7 +1103,10 @@ def beginner3Layer(state, topLayer=+K_HAT):
              thirdLayerEdgePermutation]
 
     for step in steps:
-        moves.extend(step(state, topLayer))
+        newMoves = step(state, topLayer)
+        if newMoves is None:
+            break
+        moves.extend(newMoves)
 
     refine(moves)
 

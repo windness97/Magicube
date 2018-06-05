@@ -16,19 +16,43 @@ manager = CubeManager()
 # green = {'data': [[Color.GREEN, Color.GREEN, Color.GREEN], [Color.GREEN, Color.GREEN, Color.GREEN],
 #                   [Color.RED, Color.RED, Color.BLUE]], 'center_color': Color.GREEN}
 
-yellow = {'data': [[Color.ORANGE, Color.ORANGE, Color.YELLOW], [Color.YELLOW, Color.YELLOW, Color.YELLOW],
-                   [Color.YELLOW, Color.YELLOW, Color.YELLOW]], 'center_color': Color.YELLOW}
-red = {'data': [[Color.RED, Color.RED, Color.YELLOW], [Color.RED, Color.RED, Color.YELLOW],
-                [Color.BLUE, Color.BLUE, Color.BLUE]], 'center_color': Color.RED}
-green = {'data': [[Color.GREEN, Color.GREEN, Color.GREEN], [Color.GREEN, Color.GREEN, Color.GREEN],
-                  [Color.RED, Color.RED, Color.YELLOW]], 'center_color': Color.GREEN}
 
-orange = {'data': [[Color.WHITE, Color.ORANGE, Color.ORANGE], [Color.WHITE, Color.ORANGE, Color.ORANGE],
-                   [Color.GREEN, Color.GREEN, Color.GREEN]], 'center_color': Color.ORANGE}
-blue = {'data': [[Color.BLUE, Color.BLUE, Color.BLUE], [Color.BLUE, Color.BLUE, Color.BLUE],
-                 [Color.WHITE, Color.ORANGE, Color.ORANGE]], 'center_color': Color.BLUE}
-white = {'data': [[Color.WHITE, Color.WHITE, Color.RED], [Color.WHITE, Color.WHITE, Color.RED],
-                  [Color.WHITE, Color.WHITE, Color.RED]], 'center_color': Color.WHITE}
+
+# yellow = {'data': [[Color.ORANGE, Color.ORANGE, Color.YELLOW], [Color.YELLOW, Color.YELLOW, Color.YELLOW],
+#                    [Color.YELLOW, Color.YELLOW, Color.YELLOW]], 'center_color': Color.YELLOW}
+# red = {'data': [[Color.RED, Color.RED, Color.YELLOW], [Color.RED, Color.RED, Color.YELLOW],
+#                 [Color.BLUE, Color.BLUE, Color.BLUE]], 'center_color': Color.RED}
+# green = {'data': [[Color.GREEN, Color.GREEN, Color.GREEN], [Color.GREEN, Color.GREEN, Color.GREEN],
+#                   [Color.RED, Color.RED, Color.YELLOW]], 'center_color': Color.GREEN}
+#
+# orange = {'data': [[Color.WHITE, Color.ORANGE, Color.ORANGE], [Color.WHITE, Color.ORANGE, Color.ORANGE],
+#                    [Color.GREEN, Color.GREEN, Color.GREEN]], 'center_color': Color.ORANGE}
+# blue = {'data': [[Color.BLUE, Color.BLUE, Color.BLUE], [Color.BLUE, Color.BLUE, Color.BLUE],
+#                  [Color.WHITE, Color.ORANGE, Color.ORANGE]], 'center_color': Color.BLUE}
+# white = {'data': [[Color.WHITE, Color.WHITE, Color.RED], [Color.WHITE, Color.WHITE, Color.RED],
+#                   [Color.WHITE, Color.WHITE, Color.RED]], 'center_color': Color.WHITE}
+# newdatas = [yellow, red, green, orange, blue, white]
+
+
+
+white = {'data': [[Color.ORANGE, Color.BLUE, Color.YELLOW], [Color.YELLOW, Color.WHITE, Color.BLUE],
+                  [Color.YELLOW, Color.GREEN, Color.GREEN]], 'center_color': Color.WHITE}
+
+red = {'data': [[Color.BLUE, Color.YELLOW, Color.ORANGE], [Color.ORANGE, Color.RED, Color.ORANGE],
+                [Color.ORANGE, Color.WHITE, Color.WHITE]], 'center_color': Color.RED}
+
+blue = {'data': [[Color.YELLOW, Color.WHITE, Color.BLUE], [Color.YELLOW, Color.BLUE, Color.RED],
+                 [Color.RED, Color.GREEN, Color.BLUE]], 'center_color': Color.BLUE}
+
+orange = {'data': [[Color.RED, Color.YELLOW, Color.WHITE], [Color.GREEN, Color.ORANGE, Color.BLUE],
+                   [Color.RED, Color.RED, Color.RED]], 'center_color': Color.ORANGE}
+
+green = {'data': [[Color.BLUE, Color.RED, Color.ORANGE], [Color.RED, Color.GREEN, Color.WHITE],
+                  [Color.YELLOW, Color.BLUE, Color.GREEN]], 'center_color': Color.GREEN}
+
+yellow = {'data': [[Color.WHITE, Color.GREEN, Color.GREEN], [Color.ORANGE, Color.YELLOW, Color.ORANGE],
+                   [Color.GREEN, Color.WHITE, Color.WHITE]], 'center_color': Color.YELLOW}
+
 newdatas = [yellow, red, green, orange, blue, white]
 
 manager.update_cubedatas(newdatas)
