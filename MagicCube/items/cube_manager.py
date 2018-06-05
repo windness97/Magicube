@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 import math
 from MagicCube.utils import util
+from MagicCube.cubr import solutions
+from MagicCube.cubr.cube import CubeState, brief
 
 
 class Color(object):
@@ -1141,6 +1143,17 @@ class BlockLinker(object):
 
 
 class CubeManager(object):
+    @staticmethod
+    def getTuple(colorSet):
+        l = list(colorSet)
+        l.sort()
+        return tuple(l)
+
+    def getTuple2(colorSet):
+        l = list(colorSet)
+        l.sort()
+        return tuple(l)
+
     colorlinksdic = {}
     colorlinksdic[Color.WHITE] = (Color.ORANGE, Color.BLUE, Color.RED, Color.GREEN)
     colorlinksdic[Color.RED] = (Color.WHITE, Color.BLUE, Color.YELLOW, Color.GREEN)
@@ -1148,6 +1161,91 @@ class CubeManager(object):
     colorlinksdic[Color.ORANGE] = (Color.WHITE, Color.GREEN, Color.YELLOW, Color.BLUE)
     colorlinksdic[Color.GREEN] = (Color.WHITE, Color.RED, Color.YELLOW, Color.ORANGE)
     colorlinksdic[Color.YELLOW] = (Color.RED, Color.BLUE, Color.ORANGE, Color.GREEN)
+
+    axis2color = {0: getTuple2({Color.BLUE, Color.GREEN}),
+                  1: getTuple2({Color.RED, Color.ORANGE}),
+                  2: getTuple2({Color.YELLOW, Color.WHITE})}
+    color2axis = {Color.BLUE: 0, Color.GREEN: 0,
+                  Color.RED: 1, Color.ORANGE: 1,
+                  Color.YELLOW: 2, Color.WHITE: 2}
+
+    # 配合 Cubr 的魔方还原算法，其魔方的 F 面为 RED， U 面为 YELLOW。
+    # {绿，蓝}轴向为 x 轴， {橙，红}轴向为 y 轴， {白，黄}轴向为 z 轴。
+    # 各个方块的 id = 9z + 3y + x + 1。
+    # 整个魔方从 {白，蓝，橙} 的角块为起点出发，其 id 为 1，直到 {黄，红，绿} 的角块，其 id 为 27
+    # 此处的 standardMagicube 是一个字典，key为一个方块所含颜色的集合，value为其在 Cubr 算法中的 id 与 3个轴线上的颜色。
+    standardMagicube = dict()
+    standardMagicube[getTuple2({Color.WHITE, Color.BLUE, Color.ORANGE})] = \
+        (1, (Color.BLUE, Color.ORANGE, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE, Color.ORANGE})] = \
+        (2, (None, Color.ORANGE, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE, Color.GREEN, Color.ORANGE})] = \
+        (3, (Color.GREEN, Color.ORANGE, Color.WHITE))
+
+    standardMagicube[getTuple2({Color.WHITE, Color.BLUE})] = \
+        (4, (Color.BLUE, None, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE})] = \
+        (5, (None, None, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE, Color.GREEN})] = \
+        (6, (Color.GREEN, None, Color.WHITE))
+
+    standardMagicube[getTuple2({Color.WHITE, Color.BLUE, Color.RED})] = \
+        (7, (Color.BLUE, Color.RED, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE, Color.RED})] = \
+        (8, (None, Color.RED, Color.WHITE))
+    standardMagicube[getTuple2({Color.WHITE, Color.GREEN, Color.RED})] = \
+        (9, (Color.GREEN, Color.RED, Color.WHITE))
+
+    standardMagicube[getTuple2({Color.BLUE, Color.ORANGE})] = \
+        (10, (Color.BLUE, Color.ORANGE, None))
+    standardMagicube[getTuple2({Color.ORANGE})] = \
+        (11, (None, Color.ORANGE, None))
+    standardMagicube[getTuple2({Color.GREEN, Color.ORANGE})] = \
+        (12, (Color.GREEN, Color.ORANGE, None))
+
+    standardMagicube[getTuple2({Color.BLUE})] = \
+        (13, (Color.BLUE, None, None))
+    standardMagicube[getTuple2({})] = \
+        (14, (None, None, None))
+    standardMagicube[getTuple2({Color.GREEN})] = \
+        (15, (Color.GREEN, None, None))
+
+    standardMagicube[getTuple2({Color.BLUE, Color.RED})] = \
+        (16, (Color.BLUE, Color.RED, None))
+    standardMagicube[getTuple2({Color.RED})] = \
+        (17, (None, Color.RED, None))
+    standardMagicube[getTuple2({Color.GREEN, Color.RED})] = \
+        (18, (Color.GREEN, Color.RED, None))
+
+    standardMagicube[getTuple2({Color.BLUE, Color.ORANGE, Color.YELLOW})] = \
+        (19, (Color.BLUE, Color.ORANGE, Color.YELLOW))
+    standardMagicube[getTuple2({Color.ORANGE, Color.YELLOW})] = \
+        (20, (None, Color.ORANGE, Color.YELLOW))
+    standardMagicube[getTuple2({Color.GREEN, Color.ORANGE, Color.YELLOW})] = \
+        (21, (Color.GREEN, Color.ORANGE, Color.YELLOW))
+
+    standardMagicube[getTuple2({Color.BLUE, Color.YELLOW})] = \
+        (22, (Color.BLUE, None, Color.YELLOW))
+    standardMagicube[getTuple2({Color.YELLOW})] = \
+        (23, (None, None, Color.YELLOW))
+    standardMagicube[getTuple2({Color.GREEN, Color.YELLOW})] = \
+        (24, (Color.GREEN, None, Color.YELLOW))
+
+    standardMagicube[getTuple2({Color.BLUE, Color.RED, Color.YELLOW})] = \
+        (25, (Color.BLUE, Color.RED, Color.YELLOW))
+    standardMagicube[getTuple2({Color.RED, Color.YELLOW})] = \
+        (26, (None, Color.RED, Color.YELLOW))
+    standardMagicube[getTuple2({Color.GREEN, Color.RED, Color.YELLOW})] = \
+        (27, (Color.GREEN, Color.RED, Color.YELLOW))
+
+
+    # cubr solution -> my solution dict
+    dict_CubrSolution2MySolution = {"F": "F", "F'": "G",
+                               "B": "B", "B'": "C",
+                               "L": "R", "L'": "S",
+                               "R": "L", "R'": "M",
+                               "U": "D", "U'": "E",
+                               "D": "U", "D'": "V"}
 
     outerRingPositions = (
         (1, 0), (2, 0),
@@ -1179,6 +1277,15 @@ class CubeManager(object):
                 for color in self.colordic.keys():
                     # self.colordic[color] = Color.NONE
                     self.colordic[color] = None
+
+        def getCenterColorIndex(self, color):
+            for centerColorIndex in self.colordic.keys():
+                if self.colordic[centerColorIndex] == color:
+                    return centerColorIndex
+            return None
+
+        def getColorSet(self):
+            return self.colordic.values()
 
     class FaceData(object):
         def __init__(self, dic_position2color) -> None:
@@ -1230,7 +1337,8 @@ class CubeManager(object):
         self.__colors_hsv = {int: []}
 
         self.cubedic = {}
-        self.cubes = set()
+
+        self.cubes = []
 
         # # white
         # self.set_color(Color.WHITE, (0, 0, 160), (180, 70, 255))
@@ -1275,16 +1383,16 @@ class CubeManager(object):
             colorSet = {centerColor}
             centerCube = CubeManager.Cube(colorSet)
             centerCube.colordic[centerColor] = centerColor
-            self.cubes.add(centerCube)
-            self.cubedic[CubeManager.__getTuple(colorSet)] = centerCube
+            # self.cubes.append(centerCube)
+            self.cubedic[CubeManager.getTuple(colorSet)] = centerCube
 
             for nearColor in CubeManager.colorlinksdic[centerColor]:
                 # add the edge cube
                 colorSet = {centerColor, nearColor}
-                if CubeManager.__getTuple(colorSet) not in self.cubedic.keys():
+                if CubeManager.getTuple(colorSet) not in self.cubedic.keys():
                     edgeCube = CubeManager.Cube(colorSet)
-                    self.cubes.add(edgeCube)
-                    self.cubedic[CubeManager.__getTuple(colorSet)] = edgeCube
+                    # self.cubes.append(edgeCube)
+                    self.cubedic[CubeManager.getTuple(colorSet)] = edgeCube
 
             for nearColor in CubeManager.colorlinksdic[centerColor]:
                 for nearColor2 in set(CubeManager.colorlinksdic[centerColor]) - {nearColor}:
@@ -1293,10 +1401,47 @@ class CubeManager(object):
                     # all the 3 cubes are neighbours
                     if nearColor in CubeManager.colorlinksdic[nearColor2]:
                         colorSet = {centerColor, nearColor, nearColor2}
-                        if CubeManager.__getTuple(colorSet) not in self.cubedic.keys():
+                        if CubeManager.getTuple(colorSet) not in self.cubedic.keys():
                             cornerCube = CubeManager.Cube(colorSet)
-                            self.cubes.add(cornerCube)
-                            self.cubedic[CubeManager.__getTuple(colorSet)] = cornerCube
+                            # self.cubes.append(cornerCube)
+                            self.cubedic[CubeManager.getTuple(colorSet)] = cornerCube
+
+        # save cubes in cubr sequence
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.BLUE, Color.ORANGE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.ORANGE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.GREEN, Color.ORANGE}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.BLUE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.GREEN}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.BLUE, Color.RED}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.RED}))
+        self.cubes.append(self.getCubeByCenterColors({Color.WHITE, Color.GREEN, Color.RED}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE, Color.ORANGE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.ORANGE}))
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN, Color.ORANGE}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE}))
+        self.cubes.append(None)
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE, Color.RED}))
+        self.cubes.append(self.getCubeByCenterColors({Color.RED}))
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN, Color.RED}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE, Color.ORANGE, Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.ORANGE, Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN, Color.ORANGE, Color.YELLOW}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE, Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN, Color.YELLOW}))
+
+        self.cubes.append(self.getCubeByCenterColors({Color.BLUE, Color.RED, Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.RED, Color.YELLOW}))
+        self.cubes.append(self.getCubeByCenterColors({Color.GREEN, Color.RED, Color.YELLOW}))
 
     def inputFaces(self, faces: "[FaceData]"):
         remainFaces = set(faces)
@@ -1334,17 +1479,21 @@ class CubeManager(object):
 
             neighborsColors = CubeManager.colorlinksdic[center_color]
 
-            self.getCube({center_color, neighborsColors[3], neighborsColors[0]}).colordic[center_color] = data[0][0]
-            self.getCube({center_color, neighborsColors[0]}).colordic[center_color] = data[0][1]
-            self.getCube({center_color, neighborsColors[0], neighborsColors[1]}).colordic[center_color] = data[0][2]
+            self.getCubeByCenterColors({center_color, neighborsColors[3], neighborsColors[0]}).colordic[center_color] = \
+                data[0][0]
+            self.getCubeByCenterColors({center_color, neighborsColors[0]}).colordic[center_color] = data[0][1]
+            self.getCubeByCenterColors({center_color, neighborsColors[0], neighborsColors[1]}).colordic[center_color] = \
+                data[0][2]
 
-            self.getCube({center_color, neighborsColors[3]}).colordic[center_color] = data[1][0]
-            self.getCube({center_color}).colordic[center_color] = data[1][1]
-            self.getCube({center_color, neighborsColors[1]}).colordic[center_color] = data[1][2]
+            self.getCubeByCenterColors({center_color, neighborsColors[3]}).colordic[center_color] = data[1][0]
+            self.getCubeByCenterColors({center_color}).colordic[center_color] = data[1][1]
+            self.getCubeByCenterColors({center_color, neighborsColors[1]}).colordic[center_color] = data[1][2]
 
-            self.getCube({center_color, neighborsColors[3], neighborsColors[2]}).colordic[center_color] = data[2][0]
-            self.getCube({center_color, neighborsColors[2]}).colordic[center_color] = data[2][1]
-            self.getCube({center_color, neighborsColors[2], neighborsColors[1]}).colordic[center_color] = data[2][2]
+            self.getCubeByCenterColors({center_color, neighborsColors[3], neighborsColors[2]}).colordic[center_color] = \
+                data[2][0]
+            self.getCubeByCenterColors({center_color, neighborsColors[2]}).colordic[center_color] = data[2][1]
+            self.getCubeByCenterColors({center_color, neighborsColors[2], neighborsColors[1]}).colordic[center_color] = \
+                data[2][2]
 
         self.w_mutex.release()
 
@@ -1352,8 +1501,98 @@ class CubeManager(object):
         # lock
         self.w_mutex.acquire()
         for cube in self.cubes:
-            cube.refresh()
+            if cube is not None:
+                cube.refresh()
         self.w_mutex.release()
+
+    def cubrSolution2MySolution(self, solution):
+        result = ''
+        current = None
+        for i in range(len(solution)):
+            if current is None:
+                current = solution[i]
+                if i != len(solution) - 1 and solution[i + 1] == "'":
+                    current += solution[i + 1]
+                    continue
+
+            result += CubeManager.dict_CubrSolution2MySolution[current]
+            current = None
+        return result
+
+    def solveCube(self):
+        try:
+            solution = self.cubrSolve()
+        except ValueError as reason:
+            print("%s, %s" % (reason.__class__, reason))
+            return 'IMPOSSIBLE'
+        except KeyError as reason:
+            print("%s, %s" % (reason.__class__, reason))
+            return 'ERRORCOLOR'
+
+        return self.cubrSolution2MySolution(solution)
+
+    def cubrSolve(self):
+        newStateArray = self.getCubrStateArray()
+        newState = CubeState()
+        newState.setState(newStateArray)
+
+        # print(newState)
+
+        solution = brief(solutions.beginner3Layer(newState))
+        return solution
+
+    def getCubrStateArray(self):
+
+        newState = [[[None, None, None],
+                     [None, None, None],
+                     [None, None, None]],
+
+                    [[None, None, None],
+                     [None, None, None],
+                     [None, None, None]],
+
+                    [[None, None, None],
+                     [None, None, None],
+                     [None, None, None]]]
+        counter = 0
+        for cube in self.cubes:
+            z = counter // 9
+            y = counter % 9 // 3
+            x = counter % 9 % 3
+            newState[z][y][x] = self.getCubrItem(cube)
+            counter += 1
+
+        return newState
+
+    def getCubrItem(self, cube: Cube):
+        if cube is None:
+            return (14, 210)
+
+        cubeColorset = cube.getColorSet()
+        standardItem = CubeManager.standardMagicube[CubeManager.getTuple(cubeColorset)]
+
+        # print(standardItem)
+
+        a = [None, None, None]
+        for i in range(3):
+            key = cube.getCenterColorIndex(standardItem[1][i])
+            # print('color:', standardItem[1][i], ", center:", key)
+            if key is not None:
+                a[i] = CubeManager.color2axis[key]
+        twoOneZero = {2, 1, 0}
+        noneIndexes = []
+        for i in range(3):
+            if a[i] is not None:
+                twoOneZero.remove(a[i])
+            else:
+                noneIndexes.append(i)
+
+        for i in range(len(noneIndexes)):
+            a[noneIndexes[i]] = twoOneZero.pop()
+        resultRotation = a[0] + a[1] * 10 + a[2] * 100
+        result = (standardItem[0], resultRotation)
+
+        return result
 
     def getCurrentCubeData(self):
         faces = []
@@ -1367,17 +1606,17 @@ class CubeManager(object):
 
             neighborsColors = CubeManager.colorlinksdic[color]
 
-            data[0][0] = self.getCube({color, neighborsColors[3], neighborsColors[0]}).colordic[color]
-            data[0][1] = self.getCube({color, neighborsColors[0]}).colordic[color]
-            data[0][2] = self.getCube({color, neighborsColors[0], neighborsColors[1]}).colordic[color]
+            data[0][0] = self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[0]}).colordic[color]
+            data[0][1] = self.getCubeByCenterColors({color, neighborsColors[0]}).colordic[color]
+            data[0][2] = self.getCubeByCenterColors({color, neighborsColors[0], neighborsColors[1]}).colordic[color]
 
-            data[1][0] = self.getCube({color, neighborsColors[3]}).colordic[color]
-            data[1][1] = self.getCube({color}).colordic[color]
-            data[1][2] = self.getCube({color, neighborsColors[1]}).colordic[color]
+            data[1][0] = self.getCubeByCenterColors({color, neighborsColors[3]}).colordic[color]
+            data[1][1] = self.getCubeByCenterColors({color}).colordic[color]
+            data[1][2] = self.getCubeByCenterColors({color, neighborsColors[1]}).colordic[color]
 
-            data[2][0] = self.getCube({color, neighborsColors[3], neighborsColors[2]}).colordic[color]
-            data[2][1] = self.getCube({color, neighborsColors[2]}).colordic[color]
-            data[2][2] = self.getCube({color, neighborsColors[2], neighborsColors[1]}).colordic[color]
+            data[2][0] = self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[2]}).colordic[color]
+            data[2][1] = self.getCubeByCenterColors({color, neighborsColors[2]}).colordic[color]
+            data[2][2] = self.getCubeByCenterColors({color, neighborsColors[2], neighborsColors[1]}).colordic[color]
 
         self.w_mutex.release()
         print(faces)
@@ -1407,7 +1646,7 @@ class CubeManager(object):
             totalBingos.append(0)
 
             for i in range(0, 4):
-                cube1 = self.getCube({faceCenterColor, neighborColors[i]})
+                cube1 = self.getCubeByCenterColors({faceCenterColor, neighborColors[i]})
                 position1 = outerRingPositions[i * 2]
                 # cube1.colordic[faceCenterColor] = face.points[position1[0]][position1[1]]
                 if cube1.colordic[faceCenterColor] is None:
@@ -1417,7 +1656,8 @@ class CubeManager(object):
                 elif cube1.colordic[faceCenterColor] == face.points[position1[0]][position1[1]]:
                     totalBingos[index] += 1
 
-                cube2 = self.getCube({faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
+                cube2 = self.getCubeByCenterColors(
+                    {faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
                 position2 = outerRingPositions[i * 2 + 1]
                 # cube2.colordic[faceCenterColor] = face.points[position2[0]][position2[1]]
                 if cube2.colordic[faceCenterColor] is None:
@@ -1460,11 +1700,12 @@ class CubeManager(object):
         # only one choice and have at least 2 bingos
         neighborColors = CubeManager.getNeighborColors(face.centerColor(), noConflictColor)
         for i in range(0, 4):
-            cube1 = self.getCube({faceCenterColor, neighborColors[i]})
+            cube1 = self.getCubeByCenterColors({faceCenterColor, neighborColors[i]})
             position1 = outerRingPositions[i * 2]
             cube1.colordic[faceCenterColor] = face.points[position1[0]][position1[1]]
 
-            cube2 = self.getCube({faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
+            cube2 = self.getCubeByCenterColors(
+                {faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
             position2 = outerRingPositions[i * 2 + 1]
             cube2.colordic[faceCenterColor] = face.points[position2[0]][position2[1]]
         self.w_mutex.release()
@@ -1484,14 +1725,15 @@ class CubeManager(object):
         self.w_mutex.acquire()
 
         for i in range(0, 4):
-            cube1 = self.getCube({faceCenterColor, neighborColors[i]})
+            cube1 = self.getCubeByCenterColors({faceCenterColor, neighborColors[i]})
             position1 = outerRingPositions[i * 2]
             # cube1.colordic[faceCenterColor] = face.points[position1[0]][position1[1]]
             if cube1.colordic[faceCenterColor] is not None and cube1.colordic[faceCenterColor] != \
                     face.points[position1[0]][position1[1]]:
                 conflicts += 1
 
-            cube2 = self.getCube({faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
+            cube2 = self.getCubeByCenterColors(
+                {faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
             position2 = outerRingPositions[i * 2 + 1]
             # cube2.colordic[faceCenterColor] = face.points[position2[0]][position2[1]]
             if cube2.colordic[faceCenterColor] is not None and cube2.colordic[faceCenterColor] != \
@@ -1511,11 +1753,12 @@ class CubeManager(object):
         self.w_mutex.acquire()
 
         for i in range(0, 4):
-            cube1 = self.getCube({faceCenterColor, neighborColors[i]})
+            cube1 = self.getCubeByCenterColors({faceCenterColor, neighborColors[i]})
             position1 = outerRingPositions[i * 2]
             cube1.colordic[faceCenterColor] = face.points[position1[0]][position1[1]]
 
-            cube2 = self.getCube({faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
+            cube2 = self.getCubeByCenterColors(
+                {faceCenterColor, neighborColors[i], neighborColors[i + 1 if i < 3 else 0]})
             position2 = outerRingPositions[i * 2 + 1]
             cube2.colordic[faceCenterColor] = face.points[position2[0]][position2[1]]
 
@@ -1549,40 +1792,34 @@ class CubeManager(object):
 
         return colorList
 
-    @staticmethod
-    def __getTuple(colorSet):
-        l = list(colorSet)
-        l.sort()
-        return tuple(l)
-
     def getCubes(self, colorSet: set):
         if len(colorSet) == 1:
             color = list(colorSet)[0]
             s = set()
-            s.add(self.getCube(colorSet))
+            s.add(self.getCubeByCenterColors(colorSet))
             for nearColor in CubeManager.colorlinksdic[color]:
-                s.add(self.getCube({color, nearColor}))
+                s.add(self.getCubeByCenterColors({color, nearColor}))
 
                 for nearColor2 in set(CubeManager.colorlinksdic[color]) - {nearColor}:
                     if nearColor in CubeManager.colorlinksdic[nearColor2]:
-                        s.add(self.getCube({color, nearColor, nearColor2}))
+                        s.add(self.getCubeByCenterColors({color, nearColor, nearColor2}))
             return s
         elif len(colorSet) == 2:
             colors = list(colorSet)
             s = set()
-            s.add(self.getCube({colors[0], colors[1]}))
+            s.add(self.getCubeByCenterColors({colors[0], colors[1]}))
 
             for nearColor in set(CubeManager.colorlinksdic[colors[0]]) & set(CubeManager.colorlinksdic[colors[1]]):
-                s.add(self.getCube({colors[0], colors[1], nearColor}))
+                s.add(self.getCubeByCenterColors({colors[0], colors[1], nearColor}))
             return s
         elif len(colorSet) == 3:
-            return {self.getCube(colorSet)}
+            return {self.getCubeByCenterColors(colorSet)}
 
         return None
 
-    def getCube(self, colorSet) -> Cube:
-        if CubeManager.__getTuple(colorSet) in self.cubedic.keys():
-            return self.cubedic[CubeManager.__getTuple(colorSet)]
+    def getCubeByCenterColors(self, colorSet) -> Cube:
+        if CubeManager.getTuple(colorSet) in self.cubedic.keys():
+            return self.cubedic[CubeManager.getTuple(colorSet)]
         return None
 
     def showCubes(self):
@@ -1601,66 +1838,84 @@ class CubeManager(object):
             if color == Color.WHITE or color == Color.YELLOW:
                 print('---- ' + Color.names[color] + ' ----')
                 content = ''
-                content += "%-8s" % ('None' if self.getCube({color, neighborsColors[3], neighborsColors[0]}).colordic[
-                                                   color] is None else Color.names[
-                    self.getCube({color, neighborsColors[3], neighborsColors[0]}).colordic[color]])
                 content += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[0]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[0]}).colordic[color]])
-                content += "%-8s\n" % ('None' if self.getCube({color, neighborsColors[0], neighborsColors[1]}).colordic[
-                                                     color] is None else Color.names[
-                    self.getCube({color, neighborsColors[0], neighborsColors[1]}).colordic[color]])
-
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[0]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[0]}).colordic[color]])
                 content += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[3]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[3]}).colordic[color]])
-                content += "%-8s" % ('None' if self.getCube({color}).colordic[color] is None else Color.names[
-                    self.getCube({color}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[0]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[0]}).colordic[color]])
                 content += "%-8s\n" % (
-                    'None' if self.getCube({color, neighborsColors[1]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[1]}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[0], neighborsColors[1]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[0], neighborsColors[1]}).colordic[color]])
 
-                content += "%-8s" % ('None' if self.getCube({color, neighborsColors[3], neighborsColors[2]}).colordic[
-                                                   color] is None else Color.names[
-                    self.getCube({color, neighborsColors[3], neighborsColors[2]}).colordic[color]])
                 content += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[2]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[2]}).colordic[color]])
-                content += "%-8s" % ('None' if self.getCube({color, neighborsColors[2], neighborsColors[1]}).colordic[
-                                                   color] is None else Color.names[
-                    self.getCube({color, neighborsColors[2], neighborsColors[1]}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3]}).colordic[color]])
+                content += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color}).colordic[color] is None else Color.names[
+                        self.getCubeByCenterColors({color}).colordic[color]])
+                content += "%-8s\n" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[1]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[1]}).colordic[color]])
+
+                content += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[2]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[2]}).colordic[color]])
+                content += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[2]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[2]}).colordic[color]])
+                content += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[2], neighborsColors[1]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[2], neighborsColors[1]}).colordic[color]])
                 print(content)
             else:
                 content0 += "%-27s" % ('---- ' + Color.names[color] + ' ----')
 
-                content1 += "%-8s" % ('None' if self.getCube({color, neighborsColors[3], neighborsColors[0]}).colordic[
-                                                    color] is None else Color.names[
-                    self.getCube({color, neighborsColors[3], neighborsColors[0]}).colordic[color]])
                 content1 += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[0]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[0]}).colordic[color]])
-                content1 += "%-8s" % ('None' if self.getCube({color, neighborsColors[0], neighborsColors[1]}).colordic[
-                                                    color] is None else Color.names[
-                    self.getCube({color, neighborsColors[0], neighborsColors[1]}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[0]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[0]}).colordic[color]])
+                content1 += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[0]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[0]}).colordic[color]])
+                content1 += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[0], neighborsColors[1]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[0], neighborsColors[1]}).colordic[color]])
 
                 content2 += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[3]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[3]}).colordic[color]])
-                content2 += "%-8s" % ('None' if self.getCube({color}).colordic[color] is None else Color.names[
-                    self.getCube({color}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3]}).colordic[color]])
                 content2 += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[1]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[1]}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color}).colordic[color] is None else Color.names[
+                        self.getCubeByCenterColors({color}).colordic[color]])
+                content2 += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[1]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[1]}).colordic[color]])
 
-                content3 += "%-8s" % ('None' if self.getCube({color, neighborsColors[3], neighborsColors[2]}).colordic[
-                                                    color] is None else Color.names[
-                    self.getCube({color, neighborsColors[3], neighborsColors[2]}).colordic[color]])
                 content3 += "%-8s" % (
-                    'None' if self.getCube({color, neighborsColors[2]}).colordic[color] is None else Color.names[
-                        self.getCube({color, neighborsColors[2]}).colordic[color]])
-                content3 += "%-8s" % ('None' if self.getCube({color, neighborsColors[2], neighborsColors[1]}).colordic[
-                                                    color] is None else Color.names[
-                    self.getCube({color, neighborsColors[2], neighborsColors[1]}).colordic[color]])
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[2]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[3], neighborsColors[2]}).colordic[color]])
+                content3 += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[2]}).colordic[color] is None else
+                    Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[2]}).colordic[color]])
+                content3 += "%-8s" % (
+                    'None' if self.getCubeByCenterColors({color, neighborsColors[2], neighborsColors[1]}).colordic[
+                                  color] is None else Color.names[
+                        self.getCubeByCenterColors({color, neighborsColors[2], neighborsColors[1]}).colordic[color]])
 
                 if color == Color.GREEN:
                     print(content0)

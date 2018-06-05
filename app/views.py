@@ -8,7 +8,7 @@ from flask import render_template, request, jsonify
 
 import json
 
-from MagicCube.main_flask import return_data
+from MagicCube.main_flask import return_data, solveTheCube
 
 
 @app.route('/')
@@ -71,3 +71,8 @@ def update_rubiks():
     data_json = json.loads(data_str)
     task = update_cube.delay(data_json)
     return "success"
+
+
+@app.route('/solve', methods=['POST'])
+def solve_rubiks():
+    return solveTheCube()

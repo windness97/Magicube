@@ -56,3 +56,8 @@ def update_data(data):
     global cubemanager
 
     cubemanager.update_cubedatas(data)
+
+def solveTheCube():
+    global cubemanager
+
+    return cubemanager.solveCube()
