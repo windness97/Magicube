@@ -1554,6 +1554,9 @@ class CubeManager(object):
         state = CubeState()
         state.setState(newState)
 
+        print("my: %s\ncubr: %s" % myRotates, cubrRotates)
+        print("\nstart state:\n")
+
         currentRotate = None
         for i in range(len(cubrRotates)):
             if currentRotate is None:
@@ -1563,6 +1566,8 @@ class CubeManager(object):
                     continue
 
             state.rotate(state.rotationInfo(currentRotate))
+            print(state.state)
+            print("--------------\n")
             currentRotate = None
 
         cubrSolution = brief(solutions.beginner3Layer(state))
