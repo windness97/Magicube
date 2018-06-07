@@ -80,6 +80,8 @@ def solve_rubiks():
 
 @app.route('/solve_by_rotates', methods=['POST'])
 def solve_by_rotates():
-    myRotates = request.data
-    print("capture data: %s" % myRotates)
-    return solveByRotates(myRotates)
+    data_str = bytes.decode(request.data)
+    data_json = json.loads(data_str)
+    rotates = data_json['rotates']
+    print("capture rotates: %s" % rotates)
+    return solveByRotates(rotates)
