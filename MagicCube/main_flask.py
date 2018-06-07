@@ -1,6 +1,7 @@
 import cv2
 
 from MagicCube.items.cube_manager import CubeManager, FrameHandler
+from MagicCube.cubr.cube import CubeState
 
 cubemanager = None
 state = 0
@@ -57,7 +58,19 @@ def update_data(data):
 
     cubemanager.update_cubedatas(data)
 
+
 def solveTheCube():
     global cubemanager
 
     return cubemanager.solveCube()
+
+
+def solveByRotates(myRotates):
+    global cubemanager
+
+    return cubemanager.solveByRotates(myRotates)
+
+
+if __name__ == '__main__':
+    init_cubemanager()
+    solveByRotates("RF")

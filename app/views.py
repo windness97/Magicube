@@ -8,7 +8,7 @@ from flask import render_template, request, jsonify
 
 import json
 
-from MagicCube.main_flask import return_data, solveTheCube
+from MagicCube.main_flask import return_data, solveTheCube, solveByRotates
 
 
 @app.route('/')
@@ -76,3 +76,10 @@ def update_rubiks():
 @app.route('/solve', methods=['POST'])
 def solve_rubiks():
     return solveTheCube()
+
+
+@app.route('/solve_by_rotates', methods=['POST'])
+def solve_by_rotates():
+    myRotates = request.data
+    print("capture data: %s" % myRotates)
+    return solveByRotates(myRotates)

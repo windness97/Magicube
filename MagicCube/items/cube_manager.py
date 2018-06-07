@@ -3,6 +3,7 @@ import threading
 import cv2
 import numpy as np
 import math
+import copy
 from MagicCube.utils import util
 from MagicCube.cubr import solutions
 from MagicCube.cubr.cube import CubeState, brief
@@ -1245,6 +1246,14 @@ class CubeManager(object):
                                     "R": "L", "R'": "M",
                                     "U": "D", "U'": "E",
                                     "D": "U", "D'": "V"}
+
+    dict_MySolution2CubrSolution = {"F": "F", "G": "F'",
+                                    "B": "B", "C": "B'",
+                                    "R": "L", "S": "L'",
+                                    "L": "R", "M": "R'",
+                                    "D": "U", "E": "U'",
+                                    "U": "D", "V": "D'"}
+
     dict_CubrSolution2MySolutionDebug = {"F": "F", "F'": "F'",
                                          "B": "B", "B'": "B'",
                                          "L": "R", "L'": "R'",
@@ -1523,6 +1532,44 @@ class CubeManager(object):
             result += CubeManager.dict_CubrSolution2MySolution[current]
             current = None
         return result
+
+    def mySolution2CubrSolution(self, solution):
+        result = ''
+        current = None
+        for i in range(len(solution)):
+            if current is None:
+                current = solution[i]
+                if i != len(solution) - 1 and solution[i + 1] == "'":
+                    current += solution[i + 1]
+                    continue
+
+            result += CubeManager.dict_MySolution2CubrSolution[current]
+            current = None
+        return result
+
+    def solveByRotates(self, myRotates):
+        cubrRotates = self.mySolution2CubrSolution(myRotates)
+
+        newState = copy.deepcopy(CubeState.solvedState)
+        state = CubeState()
+        state.setState(newState)
+
+        currentRotate = None
+        for i in range(len(cubrRotates)):
+            if currentRotate is None:
+                currentRotate = cubrRotates[i]
+                if i != len(cubrRotates) - 1 and cubrRotates[i + 1] == "'":
+                    currentRotate += cubrRotates[i + 1]
+                    continue
+
+            state.rotate(state.rotationInfo(currentRotate))
+            currentRotate = None
+
+        cubrSolution = brief(solutions.beginner3Layer(state))
+        mySolution = self.cubrSolution2MySolution(cubrSolution)
+        print("cubr: %s\nmy: %s" % (cubrSolution, mySolution))
+
+        return mySolution
 
     def solveCube(self):
         try:
