@@ -118,7 +118,7 @@ def determineFixTXB(info):
         # Incorrect location
         if posOfValue ** topLayer > 0:
             # Elsewhere on the top layer
-            if orientation / 100 == desiredOrientation / 100:
+            if orientation // 100 == desiredOrientation // 100:
                 # Same color facing upward
                 return relocateTopLayerTXB
             else:
@@ -129,7 +129,7 @@ def determineFixTXB(info):
             return secondLayerTXB
 
         else:
-            if orientation / 100 == desiredOrientation / 100:
+            if orientation // 100 == desiredOrientation // 100:
                 return relocateBottomLayerTXB
             else:
                 return reorientBottomLayerTXB
@@ -1103,13 +1103,20 @@ def beginner3Layer(state, topLayer=+K_HAT):
              thirdLayerCornerPermutation,
              thirdLayerEdgePermutation]
 
+    from MagicCube.cubr.cube import brief
+
+    counter = 0
     for step in steps:
         newMoves = step(state, topLayer)
         if newMoves is None:
             break
         moves.extend(newMoves)
+        print("step %d: %s" % (counter, brief(newMoves)))
+        counter += 1
 
+    print("before refine: %s" % brief(moves))
     refine(moves)
+    print("after refine: %s" % brief(moves))
 
     return moves
 
